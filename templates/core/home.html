@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Trang chủ | Bottle System{% endblock %}
+
+{% block content %}
+
+<section class="hero-banner full-bleed">
+  <div class="hero-bg-clear" style="background-image: url('{% static "img/tdtu_background.jpg" %}');"></div>
+  <div class="hero-bg-blur"  style="background-image: url('{% static "img/tdtu_background.jpg" %}');"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-banner__inner">
+    <div class="hero-banner__left">
+
+      <!-- PANEL INTRO -->
+      <div class="panel panel-show" id="panel-intro">
+        <div class="hero-kicker">ĐỒ ÁN TỔNG HỢP</div>
+        <h1 class="hero-title">Hệ thống sắp xếp và làm sạch chai nước</h1>
+        <p class="hero-desc">
+          Hệ thống gồm ba quy trình chính: dựng chai – phân loại theo chiều cao – rửa chai.
+          Đây là trang web để người dùng đặt hàng và ghi nhận lịch sử đơn đặt hàng.
+        </p>
+        <div class="cta-row cta-separated">
+          <a class="btn btn-primary btn-big" href="/order/">Đặt hàng ngay</a>
+        </div>
+      </div>
+
+      <!-- PANEL PRICING -->
+      <div class="panel panel-hide" id="panel-pricing">
+        <div class="hero-kicker">BẢNG GIÁ</div>
+        <h2 class="hero-title hero-title--sm">Giá rửa cho từng loại chai.</h2>
+        <p class="hero-desc">Chọn loại chai để xem chi phí rửa tương ứng.</p>
+
+      <div class="price-wrap">
+        <div class="price-grid price-grid--wide">
+
+          <div class="price-card price-card--wide">
+            <div class="badge">Chai thấp</div>
+            <div class="price">50đ</div>
+            <div class="sub">/ chai</div>
+          </div>
+
+          <div class="price-card price-card--wide">
+            <div class="badge">Chai trung</div>
+            <div class="price">60đ</div>
+            <div class="sub">/ chai</div>
+          </div>
+
+          <div class="price-card price-card--wide">
+            <div class="badge">Chai cao</div>
+            <div class="price">70đ</div>
+            <div class="sub">/ chai</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+      <!-- PANEL CONTACT -->
+      <div class="panel panel-hide" id="panel-contact">
+        <div class="hero-kicker">LIÊN HỆ</div>
+        <h2 class="hero-title hero-title--sm">Nhóm thực hiện</h2>
+
+        <div class="contact-card">
+          <div><b>Bùi Nguyễn Ngọc Bảo</b> — MSSV: 42101371</div>
+          <div><b>Võ Duy Tân</b> — MSSV: 42100462</div>
+          <div><b>Tạ Nguyễn Quý Dương</b> — MSSV: 42101384</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

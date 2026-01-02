@@ -1,0 +1,99 @@
+{% load static %}
+<!doctype html>
+<html lang="vi">
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{% block title %}Bottle System{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <!-- Logo trường: thay ảnh hoặc chữ -->
+      <img class="logo-img" src="{% static 'img/Logo JPG.jpg' %}" alt="Logo">
+    </div>
+
+    <nav class="menu">
+      <button class="link btn-link navlink is-active" type="button" data-target="panel-intro">Trang chủ</button>
+      <button class="link btn-link navlink" type="button" data-target="panel-pricing">Bảng giá</button>
+      <button class="link btn-link navlink" type="button" data-target="panel-contact">Liên hệ</button>
+    </nav>
+
+    <div class="auth">
+      {% if user.is_authenticated %}
+        <span class="hello">Xin chào, {{ user.username }}</span>
+        <form method="post" action="/logout/" style="margin:0;">
+          {% csrf_token %}
+          <button class="btn btn-ghost" type="submit">Đăng xuất</button>
+        </form>
+
+      {% else %}
+        <a class="btn btn-ghost" href="/login/">Đăng nhập</a>
+        <a class="btn btn-primary" href="/register/">Đăng ký</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
+
+<script src="{% static 'js/app.js' %}"></script>
+{% block scripts %}{% endblock %}
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const panels = document.querySelectorAll(".panel");
+  const links  = document.querySelectorAll(".navlink[data-target]");
+  const isHome = panels.length > 0;
+
+  function showPanel(id){
+    panels.forEach(p => {
+      p.classList.toggle("panel-show", p.id === id);
+      p.classList.toggle("panel-hide", p.id !== id);
+    });
+    links.forEach(b => b.classList.toggle("is-active", b.dataset.target === id));
+  }
+
+  function goHome(targetId){
+    const name = targetId.replace("panel-", "");
+    window.location.href = `/?panel=${encodeURIComponent(name)}`;
+  }
+
+  links.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.target;
+
+      if (isHome) {
+        showPanel(id);
+        history.replaceState(null, "", `/?panel=${id.replace("panel-","")}`);
+      } else {
+        goHome(id);
+      }
+    });
+  });
+
+  // Khi đang ở HOME: tự mở panel theo ?panel=
+  if (isHome) {
+    const sp = new URLSearchParams(window.location.search);
+    const p  = sp.get("panel");
+    const target = p ? `panel-${p}` : "panel-intro";
+    if (document.getElementById(target)) showPanel(target);
+    else showPanel("panel-intro");
+  }
+});
+</script>
+
+</body>
+</html>

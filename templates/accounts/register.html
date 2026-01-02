@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Đăng ký{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2>Đăng ký</h2>
+
+  {% for m in messages %}
+    <div class="msg msg-error">{{ m }}</div>
+  {% endfor %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <label>Tên đăng nhập</label>
+    <input name="username" required>
+
+    <label>Email</label>
+    <input name="email" type="email" placeholder="vd: abc@gmail.com">
+
+    <label>Mật khẩu</label>
+    <input name="password1" type="password" required>
+
+    <label>Xác nhận mật khẩu</label>
+    <input name="password2" type="password" required>
+
+    <button class="btn btn-primary" type="submit">Lưu</button>
+  </form>
+</div>
+
+<!-- MODAL: Register Success -->
+<div class="modal-backdrop" id="modalRegOk" data-modal-id="modalRegOk">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title">Đăng ký thành công!</h3>
+      <button class="modal-x" type="button" data-close-modal="modalRegOk">×</button>
+    </div>
+
+    <div class="modal-body">
+      <p>Đăng ký thành công! Đang chuyển sang trang đăng nhập sau <b id="regCountdown">03</b>s...</p>
+
+      <div class="summary">
+        <div><b>Tên đăng nhập:</b> {{ reg_ok.username }}</div>
+        <div><b>Email:</b> {{ reg_ok.email|default:"(chưa nhập)" }}</div>
+        <p style="margin-top:10px;">
+          Tự chuyển sang trang đăng nhập sau <b id="regCountdown">2</b>s...
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% block scripts %}
+  {{ block.super }}
+  {% if reg_ok %}
+  <script>
+    window.addEventListener("load", () => {
+      openModal("modalRegOk");
+
+      let left = 3;
+      const el = document.getElementById("regCountdown");
+      const timer = setInterval(() => {
+        left--;
+        if (el) el.textContent = left;
+        if (left <= 0) {
+          clearInterval(timer);
+          window.location.href = "/login/";
+        }
+      }, 1000);
+    });
+  </script>
+  {% endif %}
+{% endblock %}
+{% endblock %}

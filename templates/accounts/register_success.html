@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Đăng ký thành công{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2>Đăng ký thành công ✅</h2>
+  <p>Vui lòng kiểm tra lại thông tin:</p>
+
+  <div class="summary">
+    <div><b>Tên đăng nhập:</b> {{ username }}</div>
+    <div><b>Mật khẩu:</b> ********</div>
+  </div>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="/">Quay về trang chủ</a>
+    <a class="btn btn-ghost" href="/register/">Đăng ký lại</a>
+  </div>
+</div>
+
+{% endblock %}

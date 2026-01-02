@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Đặt hàng{% endblock %}
+{% block content %}
+
+<div class="card" id="orderForm">
+  <h2>Đặt hàng rửa chai</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="stage" value="preview">
+
+    <label>Họ tên</label>
+    <input name="full_name" value="{{ form.full_name|default:'' }}" required>
+
+    <label>Số điện thoại</label>
+    <input name="phone" value="{{ form.phone|default:'' }}" required>
+
+    <label>Email</label>
+    <input name="email" type="email" value="{{ form.email|default:'' }}" required>
+
+    <label>Năm sinh</label>
+    <input name="birth_year" type="number" min="1900" max="2100" value="{{ form.birth_year|default:'' }}" required>
+
+    <label>Địa chỉ giao hàng</label>
+    <input name="address" value="{{ form.address|default:'' }}" required>
+
+    <label>Số chai thấp</label>
+    <input name="qty_low" type="number" min="1" max="10" value="{{ form.qty_low|default:'0' }}">
+
+    <label>Số chai trung</label>
+    <input name="qty_mid" type="number" min="1"  max="10" value="{{ form.qty_mid|default:'0' }}">
+
+    <label>Số chai cao</label>
+    <input name="qty_high" type="number" min="1"  max="10" value="{{ form.qty_high|default:'0' }}">
+
+    <label>Ngày giao hàng mong muốn</label>
+    <input name="delivery_date" type="date" value="{{ form.delivery_date|default:'' }}" required>
+
+    <button class="btn btn-primary" type="submit">OK</button>
+  </form>
+</div>
+
+<!-- MODAL POPUP: Xác nhận đơn hàng -->
+<div class="modal-backdrop" id="modalOrderConfirm" data-modal-id="modalOrderConfirm">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title">Xác nhận đơn hàng</h3>
+      <button class="modal-x" type="button" data-close-modal="modalOrderConfirm" data-scroll="#orderForm">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="summary">
+        <div><b>Họ tên:</b> {{ data.full_name }}</div>
+        <div><b>SĐT:</b> {{ data.phone }}</div>
+        <div><b>Email:</b> {{ data.email }}</div>
+        <div><b>Năm sinh:</b> {{ data.birth_year }}</div>
+        <div><b>Địa chỉ:</b> {{ data.address }}</div>
+        <div><b>Chai thấp:</b> {{ data.qty_low }} chai.</div>
+        <div><b>Chai trung:</b> {{ data.qty_mid }} chai.</div>
+        <div><b>Chai cao:</b> {{ data.qty_high }} chai.</div>
+        <div><b>Ngày giao:</b> {{ delivery_date_display }}</div>
+
+        <hr style="border:none;border-top:1px solid rgba(15,23,42,.08);margin:12px 0;">
+        <div style="font-size:20px;"><b>Tổng tiền:</b> {{ total_display }}</div>
+
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" data-close-modal="modalOrderConfirm" data-scroll="#orderForm">Thay đổi</button>
+
+      <form method="post" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="stage" value="qr">
+        <button class="btn btn-primary" type="submit">Thanh toán</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL POPUP: QR thanh toán -->
+<div class="modal-backdrop" id="modalPay" data-modal-id="modalPay">
+  <div class="modal-card modal-card--wide">
+    <div class="modal-head">
+      <div class="modal-title">Thanh toán</div>
+      <button class="modal-x" type="button" data-close-modal="modalPay" data-scroll="#orderForm">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="pay-box">
+        <div class="pay-info">
+
+          <div class="pay-line"><b>Số tài khoản:</b> 123456789</div>
+          <div class="pay-line"><b>Người thụ hưởng:</b> Trần Văn B</div>
+          <div class="pay-line"><b>Ngân hàng:</b> VD Bank</div>
+
+          <hr class="soft-hr">
+
+
+          <!-- Countdown Thanh toán -->
+          <div class="pay-line">
+            <b>Hết hạn sau:</b> <span id="payCountdown">00:30</span>
+          </div>
+
+          <!-- Nút copy STK -->
+          <div class="pay-line" style="display:flex; gap:10px; align-items:center;">
+            <b>Số tài khoản:</b> <span id="payAccCopy">123456789</span>
+            <button type="button" class="btn btn-ghost" id="btnCopyAcc">Sao chép số tài khoản</button>
+          </div>
+          <small id="copyHint" style="display:none;">Đã sao chép!</small>
+
+
+
+          <div class="pay-line"><b>Tổng tiền:</b> {{ total_display }}</div>
+          <div class="pay-line"><b>Ngày giao:</b> {{ delivery_date_display }}</div>
+        </div>
+
+        <div class="pay-qr">
+          <img class="qr-img" src="{% static 'img/qr-fixed.png' %}" alt="QR thanh toán">
+          <div class="qr-hint">Mở app ngân hàng → Quét QR</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" data-close-modal="modalPay" data-scroll="#orderForm">Đóng</button>
+
+      <!-- nút này mới là nút GỬI POST để lưu đơn / coi như đã thanh toán -->
+      <form id="orderForm" method="post" style="margin:0">
+        {% csrf_token %}
+        <input type="hidden" name="stage" value="pay">
+        <button class="btn btn-primary" type="submit">Tôi đã thanh toán</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: Paid Success -->
+<div class="modal-backdrop" id="modalPaidOk" data-modal-id="modalPaidOk">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title">Thanh toán thành công!</h3>
+      <button class="modal-x" type="button" data-close-modal="modalPaidOk">×</button>
+    </div>
+
+    <div class="modal-body">
+      <p>Đơn hàng đã được lưu lại.</p>
+      {% if order_id %}
+        <div class="summary"><b>Mã đơn:</b> #{{ order_id }}</div>
+      {% endif %}
+    </div>
+
+    <div class="modal-foot">
+      <a class="btn btn-primary" href="/">Về trang chủ</a>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+{% block scripts %}
+  {{ block.super }}
+
+  <script>
+    // fallback nếu dự án bạn chưa có openModal/closeModal
+    window.openModal = window.openModal || function(id){
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.classList.add('show');
+    }
+    window.closeModal = window.closeModal || function(id){
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.classList.remove('show');
+    }
+
+    // click đóng modal + (riêng confirm) cuộn về form
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest('[data-close-modal]');
+      if(!btn) return;
+
+      const id = btn.getAttribute('data-close-modal');
+      closeModal(id);
+
+      if(id === 'modalOrderConfirm'){
+        const form = document.getElementById('orderForm');
+        if(form) form.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    });
+  </script>
+
+  <script>
+  (function () {
+    function closeModalById(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("show", "is-open");
+      document.body.classList.remove("modal-open");
+    }
+
+    document.addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-close-modal]");
+      if (!btn) return;
+
+      const modalId = btn.getAttribute("data-close-modal");
+      closeModalById(modalId);
+
+      const scrollSel = btn.getAttribute("data-scroll");
+      if (scrollSel) {
+        const target = document.querySelector(scrollSel);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    // bấm ra ngoài nền cũng đóng (nếu modal của bạn dùng .modal-backdrop)
+    document.addEventListener("click", function (e) {
+      const backdrop = e.target.classList && e.target.classList.contains("modal-backdrop") ? e.target : null;
+      if (!backdrop) return;
+
+      if (backdrop.id) closeModalById(backdrop.id);
+    });
+
+    // ESC để đóng
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape") return;
+      document.querySelectorAll(".modal-backdrop.show, .modal.is-open").forEach(m => {
+        if (m.id) closeModalById(m.id);
+      });
+    });
+  })();
+  </script>
+ 
+  <script>
+  (function () {
+    const form = document.getElementById("orderForm");
+    if (!form) return;
+
+    const qtyNames = ["qty_low", "qty_mid", "qty_high"];
+    const qtyFields = qtyNames.map(n => form.querySelector(`[name="${n}"]`)).filter(Boolean);
+
+    function validateQty(el) {
+      const v = Number(el.value);
+      let msg = "";
+      if (Number.isNaN(v)) msg = "Vui lòng nhập số.";
+      else if (v < 0) msg = "Không được nhập số chai âm.";
+      else if (v > 10) msg = "Số chai vượt quá phạm vi của hệ thống. Vui lòng nhập số chai dưới 10.";
+      el.setCustomValidity(msg);
+    }
+
+    qtyFields.forEach(el => {
+      el.addEventListener("input", () => validateQty(el));
+      validateQty(el);
+    });
+
+    // Năm sinh hợp lý: 1900 -> năm hiện tại
+    const by = form.querySelector(`[name="birth_year"]`);
+    if (by) {
+      const y = new Date().getFullYear();
+      by.max = String(y);
+      by.addEventListener("input", () => {
+        const v = Number(by.value);
+        let msg = "";
+        if (Number.isNaN(v)) msg = "Vui lòng nhập năm sinh.";
+        else if (v < 1900 || v > y) msg = "Năm sinh không hợp lệ.";
+        by.setCustomValidity(msg);
+      });
+    }
+
+    // Thiếu thông tin required -> message chung
+    form.querySelectorAll("[required]").forEach(el => {
+      el.addEventListener("invalid", () => {
+        if (!el.value.trim()) el.setCustomValidity("Vui lòng điền đầy đủ thông tin. Yêu cầu nhập lại.");
+      });
+      el.addEventListener("input", () => el.setCustomValidity(""));
+    });
+
+    form.addEventListener("submit", () => {
+      qtyFields.forEach(validateQty);
+    });
+  })();
+  </script>
+
+  <script>
+  (function(){
+    const btn = document.getElementById("btnCopyAcc");
+    const accEl = document.getElementById("payAccCopy");
+    const hint = document.getElementById("copyHint");
+    if (!btn || !accEl) return;
+
+    btn.addEventListener("click", async () => {
+      const text = accEl.textContent.trim();
+      try {
+        await navigator.clipboard.writeText(text);
+        if (hint) { hint.style.display = "inline"; setTimeout(()=>hint.style.display="none", 1200); }
+      } catch (e) {
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        if (hint) { hint.style.display = "inline"; setTimeout(()=>hint.style.display="none", 1200); }
+      }
+    });
+  })();
+  </script>
+
+
+  {% if show_confirm %}
+    <script>openModal('modalOrderConfirm');</script>
+  {% endif %}
+
+  {% if show_pay %}
+    <script>
+      openModal('modalPay');
+      startPayCountdown(30);
+    </script>
+  {% endif %}
+
+  <script>
+  let __payTimer = null;
+
+  function startPayCountdown(seconds = 60) {
+    const el = document.getElementById("payCountdown");
+    if (!el) return;
+
+    clearInterval(__payTimer);
+    let left = seconds;
+
+    const tick = () => {
+      const m = String(Math.floor(left / 60)).padStart(2, "0");
+      const s = String(left % 60).padStart(2, "0");
+      el.textContent = `${m}:${s}`;
+
+      if (left <= 0) {
+        clearInterval(__payTimer);
+        // hết hạn: đóng popup thanh toán
+        if (typeof closeModal === "function") closeModal("modalPay");
+        else {
+          const mp = document.getElementById("modalPay");
+          if (mp) mp.classList.remove("show", "is-open");
+        }
+        alert("Mã QR đã hết hạn. Vui lòng tạo lại thanh toán.");
+        return;
+      }
+      left--;
+    };
+
+    tick();
+    __payTimer = setInterval(tick, 1000);
+  }
+  </script>
+
+  {% if show_paid %}
+    <script>openModal('modalPaidOk');</script>
+  {% endif %}
+  
+{% endblock %}
+{% endblock %}

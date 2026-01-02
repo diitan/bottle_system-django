@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2>Đăng nhập</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="form_type" value="login">
+
+    <label>Tên đăng nhập</label>
+    <input name="username" required>
+
+    <label>Mật khẩu</label>
+    <input name="password" type="password" required>
+
+    <button class="btn btn-primary" type="submit">Đăng nhập</button>
+  </form>
+
+  <div class="row-links">
+    <button type="button" class="btn-link link" data-open-modal="modalForgot">
+      Quên mật khẩu?
+    </button>
+
+    <a class="link" href="{% url 'register' %}">
+      Chưa có tài khoản?
+    </a>
+  </div>
+
+</div>
+
+<!-- MODAL: Login Success -->
+<div class="modal-backdrop" id="modalLoginOk" data-modal-id="modalLoginOk">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title">Đăng nhập thành công!</h3>
+      <button class="modal-x" type="button" data-close-modal="modalLoginOk">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Bạn sẽ được chuyển về trang chủ.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Login Error -->
+<div class="modal-backdrop" id="modalLoginErr" data-modal-id="modalLoginErr">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title">Đăng nhập thất bại</h3>
+      <button class="modal-x" type="button" data-close-modal="modalLoginErr">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0;">Sai tên đăng nhập hoặc mật khẩu, vui lòng nhập lại.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" type="button" data-close-modal="modalLoginErr">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Reset Success -->
+<div class="modal-backdrop" id="modalResetOk" data-modal-id="modalResetOk">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title">Đặt lại mật khẩu thành công!</h3>
+      <button class="modal-x" type="button" data-close-modal="modalResetOk">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Bạn có thể đăng nhập lại bằng mật khẩu mới.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" type="button" data-close-modal="modalResetOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Forgot Password (2 bước) -->
+<div class="modal-backdrop" id="modalForgot" data-modal-id="modalForgot">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title">Quên mật khẩu</h3>
+      <button class="btn-link link" type="button" data-close-modal="modalForgot">×</button>
+    </div>
+
+    <div class="modal-body">
+      {% if forgot_error %}
+        <div class="msg msg-error">{{ forgot_error }}</div>
+      {% endif %}
+
+      {% if forgot_step == 1 %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="forgot_email">
+
+          <label>Nhập email</label>
+          <input name="email" type="email" value="{{ email|default:'' }}" required>
+
+          <div class="cta-row" style="margin-top:12px;">
+            <button class="btn btn-primary" type="submit">Xác nhận</button>
+            <button class="btn btn-ghost" type="button" data-close-modal="modalForgot">Hủy</button>
+          </div>
+        </form>
+      {% else %}
+        <p style="margin-top:0;">Email đúng. Nhập mật khẩu mới:</p>
+
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="forgot_reset">
+
+          <label>Mật khẩu mới</label>
+          <input name="password1" type="password" required>
+
+          <label>Xác nhận mật khẩu mới</label>
+          <input name="password2" type="password" required>
+
+          <div class="cta-row" style="margin-top:12px;">
+            <button class="btn btn-primary" type="submit">Đặt lại</button>
+            <a class="btn btn-ghost" href="/login/?forgot=1">Nhập lại email</a>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" data-close-modal="modalForgot">Đóng</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+{% block scripts %}
+  {{ block.super }}
+
+  {% if login_success %}
+  <script>
+    openModal('modalLoginOk');
+    setTimeout(() => { window.location.href = '/'; }, 900);
+  </script>
+  {% endif %}
+
+  {% if login_error %}
+  <script>
+    openModal('modalLoginErr');
+  </script>
+  {% endif %}
+
+  {% if reset_success %}
+  <script> openModal('modalResetOk'); </script>
+  {% endif %}
+
+  {% if open_forgot %}
+  <script> openModal('modalForgot'); </script>
+  {% endif %}
+{% endblock %}
+{% endblock %}
