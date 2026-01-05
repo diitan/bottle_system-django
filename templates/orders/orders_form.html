@@ -6,6 +6,12 @@
 <div class="card" id="orderForm">
   <h2>Đặt hàng rửa chai</h2>
 
+  {% if errors %}
+  <div class="msg msg-error">
+    {% for e in errors %}<div>{{ e }}</div>{% endfor %}
+  </div>
+  {% endif %}
+
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="stage" value="preview">
@@ -26,13 +32,13 @@
     <input name="address" value="{{ form.address|default:'' }}" required>
 
     <label>Số chai thấp</label>
-    <input name="qty_low" type="number" min="1" max="10" value="{{ form.qty_low|default:'0' }}">
+    <input name="qty_low" type="number" min="0" max="10" step="1" value="{{ form.qty_low|default:'0' }}">
 
     <label>Số chai trung</label>
-    <input name="qty_mid" type="number" min="1"  max="10" value="{{ form.qty_mid|default:'0' }}">
+    <input name="qty_mid" type="number" min="0"  max="10" step="1" value="{{ form.qty_mid|default:'0' }}">
 
     <label>Số chai cao</label>
-    <input name="qty_high" type="number" min="1"  max="10" value="{{ form.qty_high|default:'0' }}">
+    <input name="qty_high" type="number" min="0"  max="10" step="1" value="{{ form.qty_high|default:'0' }}">
 
     <label>Ngày giao hàng mong muốn</label>
     <input name="delivery_date" type="date" value="{{ form.delivery_date|default:'' }}" required>
@@ -323,6 +329,7 @@
       startPayCountdown(30);
     </script>
   {% endif %}
+  
 
   <script>
   let __payTimer = null;

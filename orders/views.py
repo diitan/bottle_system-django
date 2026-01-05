@@ -39,7 +39,7 @@ def parse_and_format_date(date_str: str):
     except Exception:
         return None, date_str
 
-
+#==========================================================
 def order_form(request):
     # form data để hiển thị lại khi sửa
     pending = request.session.get("pending_order") or {}
@@ -57,28 +57,75 @@ def order_form(request):
         stage = request.POST.get('stage', 'preview')
 
         if stage == 'preview':
-            data = \
-            {
-                'full_name': request.POST.get('full_name','').strip(),
-                'phone': request.POST.get('phone','').strip(),
-                'email': request.POST.get('email','').strip(),
-                'birth_year': request.POST.get('birth_year','').strip(),
-                'address': request.POST.get('address','').strip(),
-                'qty_low': int(request.POST.get('qty_low','0') or 0),
-                'qty_mid': int(request.POST.get('qty_mid','0') or 0),
-                'qty_high': int(request.POST.get('qty_high','0') or 0),
-                'delivery_date': request.POST.get('delivery_date','').strip(),
+            errors = []
+
+            # 1) Lấy các field text
+            full_name = request.POST.get('full_name', '').strip()
+            phone = request.POST.get('phone', '').strip()
+            email = request.POST.get('email', '').strip()
+            birth_year = request.POST.get('birth_year', '').strip()
+            address = request.POST.get('address', '').strip()
+            delivery_raw = request.POST.get('delivery_date', '').strip()
+
+            # 2) Parse qty an toàn + validate 0..10
+            def parse_qty(raw, label):
+                try:
+                    q = int(raw or 0)
+                except Exception:
+                    q = 0
+
+                if q < 0:
+                    errors.append(f"{label} không được âm.")
+                if q > 10:
+                    errors.append("Số chai vượt quá phạm vi của hệ thống. Vui lòng nhập số chai dưới 10.")
+                return q
+
+            qty_low = parse_qty(request.POST.get('qty_low', '0'), "Số chai thấp")
+            qty_mid = parse_qty(request.POST.get('qty_mid', '0'), "Số chai trung")
+            qty_high = parse_qty(request.POST.get('qty_high', '0'), "Số chai cao")
+
+            # Ép về biên để tránh total sai (tuỳ bạn: nếu muốn “bắt nhập lại” thì bỏ 3 dòng clamp này)
+            qty_low = max(0, min(10, qty_low))
+            qty_mid = max(0, min(10, qty_mid))
+            qty_high = max(0, min(10, qty_high))
+
+            # 3) Rule: phải chọn ít nhất 1 chai
+            if (qty_low + qty_mid + qty_high) == 0:
+                errors.append("Vui lòng chọn ít nhất 1 chai (thấp/trung/cao) để đặt hàng.")
+
+            # 4) Build data để đổ lại form khi lỗi
+            data = {
+                'full_name': full_name,
+                'phone': phone,
+                'email': email,
+                'birth_year': birth_year,
+                'address': address,
+                'qty_low': qty_low,
+                'qty_mid': qty_mid,
+                'qty_high': qty_high,
+                'delivery_date': delivery_raw,
             }
-            total = data['qty_low'] * 50 + data['qty_mid'] * 60 + data['qty_high'] * 70
 
-            delivery_raw = data.get("delivery_date", "")
-            delivery_obj = parse_date(delivery_raw)  # yyyy-mm-dd -> date hoặc None
+            # 5) Nếu có lỗi -> render lại, KHÔNG mở popup confirm
+            if errors:
+                ctx.update({
+                    'form': data,
+                    'data': data,
+                    'errors': errors,
+                    'show_confirm': False,
+                    'show_paid': False,
+                    'show_pay': False,
+                })
+                return render(request, 'orders/orders_form.html', ctx)
 
+            # 6) Không lỗi -> tính toán & show confirm
+            total = qty_low * 50 + qty_mid * 60 + qty_high * 70
+
+            delivery_obj = parse_date(delivery_raw)
             delivery_date_display = delivery_obj.strftime("%d-%m-%Y") if delivery_obj else delivery_raw
             total_display = f"{total:,}".replace(",", ".") + " VNĐ"
 
-            request.session['pending_order'] = \
-            {
+            request.session['pending_order'] = {
                 "form": data,
                 "total": total,
                 "total_display": total_display,
@@ -94,7 +141,6 @@ def order_form(request):
                 'show_confirm': True,
                 'show_paid': False
             })
-
             return render(request, 'orders/orders_form.html', ctx)
 
         elif stage == "qr":
