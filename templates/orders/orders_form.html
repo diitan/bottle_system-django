@@ -32,9 +32,6 @@
     <input name="address" value="{{ form.address|default:'' }}" required>
 
     <label>Số chai thấp</label>
-    <input name="qty_low" type="number" min="0" max="10" step="1" value="{{ form.qty_low|default:'0' }}">
-
-    <label>Số chai trung</label>
     <input name="qty_mid" type="number" min="0"  max="10" step="1" value="{{ form.qty_mid|default:'0' }}">
 
     <label>Số chai cao</label>
@@ -62,8 +59,7 @@
         <div><b>Email:</b> {{ data.email }}</div>
         <div><b>Năm sinh:</b> {{ data.birth_year }}</div>
         <div><b>Địa chỉ:</b> {{ data.address }}</div>
-        <div><b>Chai thấp:</b> {{ data.qty_low }} chai.</div>
-        <div><b>Chai trung:</b> {{ data.qty_mid }} chai.</div>
+        <div><b>Chai thấp:</b> {{ data.qty_mid }} chai.</div>
         <div><b>Chai cao:</b> {{ data.qty_high }} chai.</div>
         <div><b>Ngày giao:</b> {{ delivery_date_display }}</div>
 
@@ -247,7 +243,7 @@
     const form = document.getElementById("orderForm");
     if (!form) return;
 
-    const qtyNames = ["qty_low", "qty_mid", "qty_high"];
+    const qtyNames = ["qty_mid", "qty_high"];
     const qtyFields = qtyNames.map(n => form.querySelector(`[name="${n}"]`)).filter(Boolean);
 
     function validateQty(el) {

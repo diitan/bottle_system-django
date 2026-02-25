@@ -10,7 +10,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>{% block title %}Bottle System{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">   <!-- Flatpickr CSS -->
 </head>
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
 
 <body>
 
@@ -18,27 +24,54 @@
   <div class="nav-inner">
     <div class="brand">
       <!-- Logo trường: thay ảnh hoặc chữ -->
-      <img class="logo-img" src="{% static 'img/Logo JPG.jpg' %}" alt="Logo">
+      {% if request.user.is_staff or request.user.is_superuser %}
+        <!-- Nếu là Admin -->
+        <a href="" class="logo-link"><img class="logo-img" src="{% static 'img/Logo JPG.jpg' %}" alt="Logo"></a>
+      {% else %}
+        <a href="{% url 'home' %}" class="logo-link"><img class="logo-img" src="{% static 'img/Logo JPG.jpg' %}" alt="Logo"></a>
+      {% endif %}
     </div>
 
     <nav class="menu">
-      <button class="link btn-link navlink is-active" type="button" data-target="panel-intro">Trang chủ</button>
-      <button class="link btn-link navlink" type="button" data-target="panel-pricing">Bảng giá</button>
-      <button class="link btn-link navlink" type="button" data-target="panel-contact">Liên hệ</button>
+      {% comment %} Hiện menu chỉ hiển thị cho người bình thường, KHÔNG cho admin/staff {% endcomment %}
+      {% if not request.user.is_staff and not request.user.is_superuser %}
+        <button class="link btn-link navlink is-active" type="button" data-target="panel-intro">Trang chủ</button>
+        <button class="link btn-link navlink" type="button" data-target="panel-pricing">Bảng giá</button>
+        <button class="link btn-link navlink" type="button" data-target="panel-contact">Liên hệ</button>
+      {% endif %}
     </nav>
 
-    <div class="auth">
-      {% if user.is_authenticated %}
-        <span class="hello">Xin chào, {{ user.username }}</span>
-        <form method="post" action="/logout/" style="margin:0;">
-          {% csrf_token %}
-          <button class="btn btn-ghost" type="submit">Đăng xuất</button>
-        </form>
+    <!-- AUTH AREA -->
+    {% if user.is_authenticated %}
 
-      {% else %}
-        <a class="btn btn-ghost" href="/login/">Đăng nhập</a>
-        <a class="btn btn-primary" href="/register/">Đăng ký</a>
-      {% endif %}
+        {% if user.is_staff or user.is_superuser %}
+            <!-- ADMIN -->
+            <div class="auth admin-auth" style="display:flex;align-items:center;gap:13px;">
+                <span class="hello">Xin chào Quản Trị Viên,</span>
+                <form action="{% url 'admin_logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-bounce">Đăng xuất</button>
+                </form>
+            </div>
+
+        {% else %}
+            <!-- USER THƯỜNG -->
+            <div class="auth" style="display:flex;align-items:center;gap:13px;">
+                <span class="hello">Xin chào Khách Hàng: {{ user.username }},</span>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-bounce">Đăng xuất</button>
+                </form>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- CHƯA LOGIN -->
+        <div class="auth auth-buttons">
+            <a class="btn btn-success" href="{% url 'login' %}">Đăng nhập</a>
+            <a class="btn btn-primary btn-bounce" href="{% url 'register' %}">Đăng ký</a>
+        </div>
+    {% endif %}
     </div>
   </div>
 </header>

@@ -94,6 +94,7 @@ def password_reset_demo(request):
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
+from django.conf import settings
 
 def login_view(request):
     ctx = {
@@ -117,10 +118,14 @@ def login_view(request):
             username = request.POST.get('username', '').strip()
             password = request.POST.get('password', '')
             user = authenticate(request, username=username, password=password)
+
             if user:
                 login(request, user)
-                request.session['login_ok'] = True
-                return redirect('/login/')  # sẽ mở modal rồi auto về home
+                # Nếu là admin
+                if user.is_staff or user.is_superuser:
+                    return redirect('admin_dashboard')
+                # Nếu là user thường
+                return redirect('home')
             else:
                 ctx['login_error'] = True
 
@@ -171,4 +176,5 @@ from django.shortcuts import redirect
 @require_POST
 def logout_view(request):
     logout(request)
+    request.session.pop('is_site_admin', None)  # xoá trang thái đăng nhập admin nếu có
     return redirect("/")

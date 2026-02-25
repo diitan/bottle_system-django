@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+{% block title %}Trang dành cho quản trị viên{% endblock %}
+
+{% block content %}
+<section class="hero-banner full-bleed admin-hero">
+
+  <!-- Background -->
+  <div class="hero-bg-blur"
+       style="background-image: url('{% static "img/tdtu_background.jpg" %}');">
+  </div>
+
+  <div class="hero-overlay"></div>
+
+  <!-- CONTENT WRAPPER -->
+  <div class="admin-wrapper">
+
+    <div class="admin-grid">
+
+      <!-- LEFT -->
+      <div>
+        <div class="contact-card">
+          <h3>Danh sách đơn hàng</h3>
+
+          <div class="table-tools">
+            <input type="text" id="searchInput" placeholder="Tìm theo tên...">
+
+              <select id="statusFilter">
+                <option value="">Tất cả trạng thái</option>
+                <option value="paid">Đã thanh toán</option>
+                <option value="pending">Chưa thanh toán</option>
+              </select>
+            </div>
+
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>ID</th>
+                <th>Họ tên</th>
+                <th>Ngày đặt</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in orders %}
+              <tr class="order-row"
+                  data-id="{{ o.id }}"
+                  data-paid="{{ o.is_paid|yesno:'1,0' }}"
+                  data-name="{{ o.full_name }}"
+                  data-phone="{{ o.phone }}"
+                  data-email="{{ o.email }}"
+                  data-birth="{{ o.birth_year }}"
+                  data-address="{{ o.address }}"
+                  data-mid="{{ o.qty_mid }}"
+                  data-high="{{ o.qty_high }}"
+                  data-date="{{ o.created_at|date:'d-m-Y H:i' }}"
+                  data-total="{{ o.total_price|intcomma }} VNĐ"
+                  data-status="{% if o.is_paid %}Đã thanh toán{% else %}Chưa thanh toán{% endif %}">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ o.id }}</td>
+                <td>{{ o.full_name }}</td>
+                <td>{{ o.created_at|date:"d-m-Y H:i" }}</td>
+                <td>{{ o.total_price|intcomma }} VNĐ</td>
+                <td>
+                  {% if o.is_paid %}
+                    <span class="badge success">Đã thanh toán</span>
+                  {% else %}
+                    <span class="badge pending">Chưa thanh toán</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <div class="pagination">
+            {% if orders.has_previous %}
+              <a href="?page={{ orders.previous_page_number }}">«</a>
+            {% endif %}
+
+            {% for num in orders.paginator.page_range %}
+              {% if orders.number == num %}
+                <span class="active">{{ num }}</span>
+              {% else %}
+                <a href="?page={{ num }}">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if orders.has_next %}
+              <a href="?page={{ orders.next_page_number }}">»</a>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="admin-right">
+
+        <div class="contact-card">
+          <h3>Xuất dữ liệu</h3>
+          <form method="get" action="{% url 'admin_export_excel' %}">
+            <label>Từ</label>
+            <!--<input type="date" name="start_date" lang="vi">-->
+            <input type="text" name="start_date" id="startDate" placeholder="dd/mm/yyyy">
+
+            <label>Đến</label>
+            <!--<input type="date" name="end_date" lang="vi">-->
+            <input type="text" name="end_date" id="endDate" placeholder="dd/mm/yyyy">
+
+            <div style="margin-top:15px;display:flex;gap:10px;">
+              <a href="{% url 'admin_export_excel' %}" class="btn btn-primary btn-bounce"> Xuất Excel</a>
+              <a href="{% url 'admin_dashboard' %}" class="btn btn-success">Xoá</a>
+            </div>
+          </form>
+        </div>
+
+        <div class="contact-card">
+          <h3>Thống kê nhanh</h3>
+            <div class="stats-grid">
+
+              <div class="stat-card">
+                <div class="stat-icon total">
+                  <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <span>Tổng đơn</span>
+                <strong id="statTotal">{{ total }}</strong>
+                <!--<h2>{{ total }}</h2>-->
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-icon processed">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <span>Đã xử lý</span>
+                <strong id="statProcessed">{{ processed }}</strong>
+                <!--<h2>{{ processed }}</h2>-->
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-icon pending">
+                  <i class="fa-solid fa-clock"></i>
+                </div>
+                <span>Chưa xử lý</span>
+                <strong id="statPending">{{ pending }}</strong>
+                <!--<h2>{{ pending }}</h2>-->
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL: Chi tiết đơn hàng -->
+<div class="modal-backdrop" id="modalOrderDetail">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 class="modal-title">Chi tiết đơn hàng</h3>
+      <button class="modal-x" data-close-modal="modalOrderDetail">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="summary" id="orderDetailContent">
+      </div>
+    </div>
+
+    <div class="modal-foot"style="display:flex; justify-content:space-between;">
+      <button class="btn btn-danger-gradient" id="deleteOrderBtn">Xoá</button>
+      <button class="btn btn-ghost" data-close-modal="modalOrderDetail">Đóng</button>
+    </div>
+  </div>
+</div>
+
+
+{% block scripts %}
+{{ block.super }}
+
+<script>
+let currentOrderId = null;
+let currentRow = null;
+let currentPaidStatus = null;
+
+document.addEventListener("DOMContentLoaded", function(){
+
+  document.querySelectorAll(".order-row").forEach(row => {
+
+    row.style.cursor = "pointer";
+
+    row.addEventListener("click", function(){
+
+      currentOrderId = this.dataset.id;
+      currentRow = this;
+      currentPaidStatus = this.dataset.paid;
+
+      const html = `
+        <div><b>Mã đơn:</b> #${this.dataset.id}</div>
+        <div><b>Họ tên:</b> ${this.dataset.name}</div>
+        <div><b>SĐT:</b> ${this.dataset.phone}</div>
+        <div><b>Email:</b> ${this.dataset.email}</div>
+        <div><b>Năm sinh:</b> ${this.dataset.birth}</div>
+        <div><b>Địa chỉ:</b> ${this.dataset.address}</div>
+        <div><b>Chai thấp:</b> ${this.dataset.mid}</div>
+        <div><b>Chai cao:</b> ${this.dataset.high}</div>
+        <div><b>Ngày giao:</b> ${this.dataset.date}</div>
+        <hr style="margin:12px 0">
+        <div style="font-size:20px"><b>Tổng tiền:</b> ${this.dataset.total}</div>
+        <div><b>Trạng thái:</b> ${this.dataset.status}</div>
+      `;
+
+      document.getElementById("orderDetailContent").innerHTML = html;
+      openModal("modalOrderDetail");
+    });
+  });
+
+});
+</script>
+
+<script>
+flatpickr("#startDate", {
+  dateFormat: "d/m/Y",
+  locale: "vn",
+  allowInput: true
+});
+
+flatpickr("#endDate", {
+  dateFormat: "d/m/Y",
+  locale: "vn",
+  allowInput: true
+});
+</script>
+
+<!-- MODAL CONFIRM DELETE -->
+<script>
+/* Cập nhật số */
+function updateStatsAfterDelete() {
+
+  const totalEl = document.getElementById("statTotal");
+  const processedEl = document.getElementById("statProcessed");
+  const pendingEl = document.getElementById("statPending");
+
+  let total = parseInt(totalEl.textContent);
+  let processed = parseInt(processedEl.textContent);
+  let pending = parseInt(pendingEl.textContent);
+
+  total -= 1;
+
+  if(currentPaidStatus === "1"){
+    processed -= 1;
+  } else {
+    pending -= 1;
+  }
+
+  animateNumber(totalEl, total);
+  animateNumber(processedEl, processed);
+  animateNumber(pendingEl, pending);
+}
+
+/* Animation đếm số */
+function animateNumber(element, newValue){
+  element.style.transform = "scale(1.2)";
+  element.textContent = newValue;
+
+  setTimeout(() => {
+    element.style.transform = "scale(1)";
+  }, 200);
+}
+/* Xoá */
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+document.getElementById("deleteOrderBtn").addEventListener("click", function(){
+
+  if(!currentOrderId) return;
+
+fetch(`/delete-order/${currentOrderId}/`, {
+  method: "POST",
+  headers: {
+    "X-CSRFToken": getCookie("csrftoken"),
+    "Content-Type": "application/json"
+  }
+})
+  .then(res => res.json())
+  .then(data => {
+
+    if(data.success){
+
+      // animation xoá
+      currentRow.style.transition = "0.3s ease";
+      currentRow.style.opacity = "0";
+      currentRow.style.transform = "translateX(-20px)";
+
+      setTimeout(() => {
+        currentRow.remove();
+        updateStatsAfterDelete();
+      }, 300);
+
+      closeModal("modalOrderDetail");
+
+      // toast
+      const toast = document.getElementById("toastSuccess");
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2500);
+    }
+  });
+
+});
+</script>
+
+<!-- TOAST DELETE NOTIFICATION -->
+<div id="toastSuccess" class="toast-success">
+  Đã xoá thành công!
+</div>
+
+<!-- SEARCH -->
+<script>
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+const rows = document.querySelectorAll(".orders-table tbody tr");
+
+function filterTable() {
+  const searchValue = searchInput.value.toLowerCase();
+  const statusValue = statusFilter.value;
+
+  rows.forEach(row => {
+    const name = row.children[2].textContent.toLowerCase();
+    const statusText = row.children[5].textContent.toLowerCase();
+
+    const matchSearch = name.includes(searchValue);
+
+    let matchStatus = true;
+    if (statusValue === "paid") {
+      matchStatus = statusText.includes("đã");
+    } else if (statusValue === "pending") {
+      matchStatus = statusText.includes("chưa");
+    }
+
+    row.style.display = (matchSearch && matchStatus) ? "" : "none";
+  });
+}
+
+searchInput.addEventListener("input", filterTable);
+statusFilter.addEventListener("change", filterTable);
+</script>
+
+
+{% endblock %}
+{% endblock %}
+
