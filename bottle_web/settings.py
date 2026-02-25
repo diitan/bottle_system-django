@@ -4,6 +4,7 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 
+
 # ======================================
 # BASE DIR
 # ======================================
@@ -15,6 +16,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env_path = BASE_DIR / ".env"
 if env_path.exists():
     load_dotenv(env_path)
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / ".env")
+except:
+    pass
 
 # ======================================
 # CORE SETTINGS
