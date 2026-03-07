@@ -17,12 +17,6 @@ env_path = BASE_DIR / ".env"
 if env_path.exists():
     load_dotenv(env_path)
 
-try:
-    from dotenv import load_dotenv
-    load_dotenv(BASE_DIR / ".env")
-except:
-    pass
-
 # ======================================
 # CORE SETTINGS
 # ======================================
@@ -110,7 +104,8 @@ WSGI_APPLICATION = "bottle_web.wsgi.application"
 # ======================================
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        #default=os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        default=os.getenv("DATABASE_URL"),
         conn_max_age=600,
     )
 }
@@ -119,11 +114,7 @@ DATABASES = {
 # STATIC FILES
 # ======================================
 STATIC_URL = "/static/"
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-
+STATICFILES_DIRS = [BASE_DIR / "static",]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 if DEBUG:
@@ -152,15 +143,3 @@ if DEBUG and not CSRF_TRUSTED_ORIGINS:
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
-
-# ======================================
-# SECURITY (Production only)
-# ======================================
-#if not DEBUG:
-#    SECURE_SSL_REDIRECT = True
-#    SESSION_COOKIE_SECURE = True
-#    CSRF_COOKIE_SECURE = True
-#else:
-#    SECURE_SSL_REDIRECT = False
-#    SESSION_COOKIE_SECURE = False
-#    CSRF_COOKIE_SECURE = False
